@@ -1,3 +1,4 @@
+#include "n_modify.h"
 #include "n_chat.h"
 #include "n_register.h"
 #include "nettalk.h"
@@ -34,7 +35,7 @@ Nettalk::Nettalk(QWidget *parent) :
     psLineEdit = new QLineEdit(box1);
     loginPushButton = new QPushButton("登录", box1);
     registerLabel = new QLabel("<style> a {text-decoration: none; color:#0099ff;} </style><a href='#'>注册账号</a>", box2);
-    forgetLabel = new QLabel("<style> a {text-decoration: none; color:#0099ff} </style><a href='#'>忘记密码?</a>", box2);
+    modLabel = new QLabel("<style> a {text-decoration: none; color:#0099ff} </style><a href='#'>修改密码</a>", box2);
 
     QFont ft("Microsoft YaHei", 12, 50, false);
 
@@ -44,8 +45,7 @@ Nettalk::Nettalk(QWidget *parent) :
 
     ft.setPixelSize(16);
     registerLabel->setFont(ft);
-    forgetLabel->setFont(ft);
-
+    modLabel->setFont(ft);
     acLineEdit->setEchoMode(QLineEdit::Normal);
     acLineEdit->setPlaceholderText("账号");
     psLineEdit->setEchoMode(QLineEdit::Password);
@@ -61,7 +61,7 @@ Nettalk::Nettalk(QWidget *parent) :
     hBoxLayout->addSpacerItem(new QSpacerItem(70, 0, QSizePolicy::Fixed));
     hBoxLayout->addWidget(registerLabel);
     hBoxLayout->setSpacing(50);
-    hBoxLayout->addWidget(forgetLabel);
+    hBoxLayout->addWidget(modLabel);
     hBoxLayout->setContentsMargins(0, 0, 0, 0);
     box2->setLayout(hBoxLayout);
 
@@ -76,7 +76,7 @@ Nettalk::Nettalk(QWidget *parent) :
     acLineEdit->show();
     psLineEdit->show();
     registerLabel->show();
-    forgetLabel->show();
+    modLabel->show();
     loginPushButton->show();
     this->setStyleSheet("\
     QGroupBox {width:80%; border:none; margin:10px 70px; padding-top:8px}\
@@ -93,7 +93,7 @@ Nettalk::Nettalk(QWidget *parent) :
 
     connect(loginPushButton, SIGNAL(clicked(bool)), this, SLOT(loginPushButton_clicked()));
     connect(registerLabel, SIGNAL(linkActivated(QString)), this, SLOT(registerLabel_clicked()));
-    connect(forgetLabel, SIGNAL(linkActivated(QString)), this, SLOT(forgetLabel_clicked()));
+    connect(modLabel, SIGNAL(linkActivated(QString)), this, SLOT(modLabel_clicked()));
     connect(sd, SIGNAL(readyRead()), this, SLOT(sdRecv()));
 }
 
@@ -183,9 +183,13 @@ void Nettalk::registerLabel_clicked()
     this->close();
 }
 
-void Nettalk::forgetLabel_clicked()
+void Nettalk::modLabel_clicked()
 {
-    qDebug("forget\n");
+    N_modify *mod = new N_modify();
+    mod->setWindowTitle("修改密码");
+    mod->setAttribute(Qt::WA_DeleteOnClose);
+    mod->show();
+    this->close();
 }
 
 //void Nettalk::paintEvent(QPaintEvent *event)

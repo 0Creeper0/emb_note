@@ -52,6 +52,8 @@ N_register::N_register(QWidget *parent) :
     commitPushButton->setFont(ft);
     cancelPushButton->setFont(ft);
     accountLineEdit->setFont(ft);
+    passwdLineEdit->setFont(ft);
+    passwd2LineEdit->setFont(ft);
     emailLineEdit->setFont(ft);
     phoneLineEdit->setFont(ft);
 

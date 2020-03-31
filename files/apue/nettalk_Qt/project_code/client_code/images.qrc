@@ -6,5 +6,6 @@
         <file>images/emoji.svg</file>
         <file>images/4.jpg</file>
         <file>images/emoji2.svg</file>
+        <file>images/icon.ico</file>
     </qresource>
 </RCC>

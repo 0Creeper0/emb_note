@@ -28,20 +28,25 @@ SOURCES += \
         nettalk.cpp \
     n_register.cpp \
     n_chat.cpp \
-    addfriend.cpp
+    addfriend.cpp \
+    n_modify.cpp
 
 HEADERS += \
         nettalk.h \
     n_register.h \
     n_chat.h \
     addfriend.h \
-    proto.h
+    proto.h \
+    n_modify.h
 
 FORMS += \
         nettalk.ui \
     n_register.ui \
     n_chat.ui \
-    addfriend.ui
+    addfriend.ui \
+    n_modify.ui
 
 RESOURCES += \
     images.qrc
+
+RC_ICONS += icon.ico

@@ -12,65 +12,8 @@
 
 #include "../proto.h"
 
-int regIsOk(reg_t *reg)
-{
-	printf("account:%s\npasswd:%s\nemail:%s\nphone:%s\n", reg->account, reg->passwd, reg->email, reg->phone);
-	sqlite3 *db;
-	int ret;
-	char *sql = "select * from regTable where account=?";
-	sqlite3_stmt *stmt;
-
-	ret = sqlite3_open("./server.db", &db);
-	if (ret != SQLITE_OK) {
-		return -1;
-	}
-
-	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL); // 准备数据
-	if (ret != SQLITE_OK) {
-		goto PREPAER_ERROR;
-	}
-
-	sqlite3_bind_text(stmt, 1, reg->account, -1, NULL); // 1为？的编号， 从1开始
-
-	// SQLITE_ROW	查到了
-	// SQLITE_DONE	没查到
-	ret = sqlite3_step(stmt); // 执行stmt(实质执行sql查询)
-	if (ret != SQLITE_DONE) {
-		// 查到或者出错
-		goto STEP_ERROR;
-	}
-
-	// 可以注册
-	sql = "insert into regTable(account, passwd, email, phone) values(?,?,?,?)";
-	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-	if (ret != SQLITE_OK) {
-		goto PREPAER_ERROR;
-	}
-
-	sqlite3_bind_text(stmt, 1, reg->account, -1, NULL);
-	sqlite3_bind_text(stmt, 2, reg->passwd, -1, NULL);
-	sqlite3_bind_text(stmt, 3, reg->email, -1, NULL);
-	sqlite3_bind_text(stmt, 4, reg->phone, -1, NULL);
-
-	// SQLITE_DONE	成功
-	ret = sqlite3_step(stmt); //执行插入
-	if (ret != SQLITE_DONE) {
-		goto STEP_ERROR;
-	}
-
-	sqlite3_finalize(stmt);
-	sqlite3_close(db);
-	return 0;
-
-PREPAER_ERROR:
-	sqlite3_close(db);
-	return -1;
-STEP_ERROR:
-	sqlite3_finalize(stmt);
-	sqlite3_close(db);
-	return -1;
-	return 0;
-}
+int regIsOk(reg_t *reg);
+int modIsOk(reg_t *reg);
 
 int main(void)
 {
@@ -137,11 +80,21 @@ int main(void)
 			continue;
 		}
 		if (pid == 0) {
-			ret = regIsOk(&reg);
-			if (ret == 0) {
-				reg.status = REG_STATUS_OK;
-			} else if (ret == -1) {
-				reg.status = REG_STATUS_ALREADY;
+			printf("status:%d\n", reg.status);
+			if (reg.status == MOD_STATUS_OK) {
+				ret = modIsOk(&reg);
+				if (ret == 0) {
+					reg.status = MOD_STATUS_OK;
+				} else if (ret == -1) {
+					reg.status = MOD_STATUS_ERROR;
+				}
+			} else {
+				ret = regIsOk(&reg);
+				if (ret == 0) {
+					reg.status = REG_STATUS_OK;
+				} else if (ret == -1) {
+					reg.status = REG_STATUS_ALREADY;
+				}
 			}
 			sendto(sd, (void *)&reg, sizeof(reg), 0, (void *)&client_addr, sizeof(client_addr));
 			_exit(0);
@@ -149,4 +102,120 @@ int main(void)
 	}
 
 	exit(0);
+}
+
+int regIsOk(reg_t *reg)
+{
+	printf("account:%s\npasswd:%s\nemail:%s\nphone:%s\n", reg->account, reg->passwd, reg->email, reg->phone);
+	sqlite3 *db;
+	int ret;
+	char *sql = "select * from regTable where account=?";
+	sqlite3_stmt *stmt;
+
+	ret = sqlite3_open("./server.db", &db);
+	if (ret != SQLITE_OK) {
+		return -1;
+	}
+
+	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL); // 准备数据
+	if (ret != SQLITE_OK) {
+		goto PREPAER_ERROR;
+	}
+
+	sqlite3_bind_text(stmt, 1, reg->account, -1, NULL); // 1为？的编号， 从1开始
+
+	// SQLITE_ROW	查到了
+	// SQLITE_DONE	没查到
+	ret = sqlite3_step(stmt); // 执行stmt(实质执行sql查询)
+	if (ret != SQLITE_DONE) {
+		// 查到或者出错
+		goto STEP_ERROR;
+	}
+
+	// 可以注册
+	sql = "insert into regTable(account, passwd, email, phone) values(?,?,?,?)";
+	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		goto PREPAER_ERROR;
+	}
+
+	sqlite3_bind_text(stmt, 1, reg->account, -1, NULL);
+	sqlite3_bind_text(stmt, 2, reg->passwd, -1, NULL);
+	sqlite3_bind_text(stmt, 3, reg->email, -1, NULL);
+	sqlite3_bind_text(stmt, 4, reg->phone, -1, NULL);
+
+	// SQLITE_DONE	成功
+	ret = sqlite3_step(stmt); //执行插入
+	if (ret != SQLITE_DONE) {
+		goto STEP_ERROR;
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return 0;
+
+PREPAER_ERROR:
+	sqlite3_close(db);
+	return -1;
+STEP_ERROR:
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return -1;
+}
+
+int modIsOk(reg_t *reg)
+{
+	printf("account:%s\nold:%s\npasswd:%s\n", reg->account, reg->old_passwd, reg->passwd);
+	sqlite3 *db;
+	int ret;
+	char *sql;
+	sqlite3_stmt *stmt;
+
+	ret = sqlite3_open("./server.db", &db);
+	if (ret != SQLITE_OK) {
+		return -1;
+	}
+
+	// 检查原密码正确性
+	sql = "select * from regTable where account=? and passwd=?;";
+	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		goto PREPAER_ERROR;
+	}
+
+	sqlite3_bind_text(stmt, 1, reg->account, -1, NULL);
+	sqlite3_bind_text(stmt, 2, reg->old_passwd, -1, NULL);
+
+	ret = sqlite3_step(stmt);
+	if (ret != SQLITE_ROW) {
+		// 没查到或者出错
+		goto STEP_ERROR;
+	}
+
+	// 可以修改
+	sql = "update regTable set passwd=? where account=?;";
+	ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+	if (ret != SQLITE_OK) {
+		goto PREPAER_ERROR;
+	}
+
+	sqlite3_bind_text(stmt, 1, reg->passwd, -1, NULL);
+	sqlite3_bind_text(stmt, 2, reg->account, -1, NULL);
+
+	ret = sqlite3_step(stmt);
+	if (ret != SQLITE_DONE) {
+		goto STEP_ERROR;
+	}
+
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return 0;
+
+PREPAER_ERROR:
+	sqlite3_close(db);
+	return -1;
+STEP_ERROR:
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return -1;
 }

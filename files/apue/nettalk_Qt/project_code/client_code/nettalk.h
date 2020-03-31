@@ -27,7 +27,7 @@ public:
 
 private slots:
     void registerLabel_clicked();
-    void forgetLabel_clicked();
+    void modLabel_clicked();
     void loginPushButton_clicked();
     void sdRecv();
 
@@ -45,7 +45,7 @@ private:
     QVBoxLayout *vBoxLayout2;
     QHBoxLayout *hBoxLayout;
     QLabel *registerLabel;
-    QLabel *forgetLabel;
+    QLabel *modLabel;
     QUdpSocket *sd;
 };
 
